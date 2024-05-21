@@ -45,9 +45,10 @@ def main():
         raise ValueError("Invalid gamemode")
     mode_ops = []
     altmode_ops = []
+    rounds_per_side = rounds["rounds_per_side"]+rounds["OT"]
     for i in range(rounds["rounds_per_side"]+rounds["OT"]):
-        mode_ops.append(pick_random_op(mode, mode_ops))
-        altmode_ops.append(pick_random_op(altmode, altmode_ops))
+        mode_ops.append(pick_random_op(mode, rounds_per_side, mode_ops))
+        altmode_ops.append(pick_random_op(altmode, rounds_per_side, altmode_ops))
     logging.debug("Created mode_ops and altmode_ops")
     for j in range(1, rounds["rounds_per_side"]+1):
         print(f"{mode} (round {j}): {mode_ops[j-1]}")
@@ -74,12 +75,14 @@ def valid_operators(side:Literal["attack", "defense"]):
     valid_operators_l = [operator for operator, owned in op_list[side].items() if owned]
     logging.debug(f"valid_operators({side}): {valid_operators_l}")
     return valid_operators_l
-def pick_random_op(side:Literal["attack", "defense"], exclusions:list = None):
+def pick_random_op(side:Literal["attack", "defense"], rounds:int, exclusions:list = None):
     if exclusions is None:
         exclusions = []
+    logging.debug(f"exclusions: {exclusions}")
     v_op = valid_operators(side)
     operator = v_op[random.randint(0, len(v_op)-1)]
-    while operator in exclusions and len(v_op)!=1:
+    while operator in exclusions and len(v_op) > rounds-1:
+        logging.debug(f"{operator} was already taken, retrying...")
         operator = v_op[random.randint(0, len(v_op)-1)]
     logging.debug(f"pick_random_operator({side}):{operator}")
     return operator
