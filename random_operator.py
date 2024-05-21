@@ -3,70 +3,86 @@ from datetime import datetime
 from typing import Literal
 logger = logging.getLogger(__name__)
 filename = f"r6randomop_{str(datetime.now().date()).replace("-","_")}.log"
-logging.basicConfig(filename=filename, encoding='utf-8', level=logging.DEBUG, style="%(date)s::%(name)s::%(levelname)-8s:%(message)s")
+log_format = "%(asctime)s::%(levelname)-8s:%(message)s"
+logging.basicConfig(filename=filename, encoding='utf-8', level=logging.DEBUG, format=log_format, datefmt="%H:%M:%S")
+
+json_name = "op_list.json"
+#json_name = "operator_list.json"
+
 def main():
     mode = input("Mode: ").lower()
     if mode[0] == "a":
         mode = "attack"
+        altmode = "defense"
         logging.info("Mode: attack")
     elif mode[0] == "d":
         mode = "defense"
+        altmode = "attack"
         logging.info("Mode: defense")
     else:
         logging.error("Invalid mode input")
         raise ValueError(f"Not a valid input \"{mode}\"")
     rounds = 0
     gmode = input("Gamemode: ").lower()[0]
+    rounds = {
+        "rounds_per_side":0,
+        "OT":0
+    }
     if gmode == "q":
-        rounds = 5
+        rounds["rounds_per_side"] = 2
+        rounds["OT"] = 1
         logging.info("Gamemode: Quick match")
     elif gmode == "s":
-        rounds = 7
+        rounds["rounds_per_side"] = 3
+        rounds["OT"] = 1
         logging.info("Gamemode: Standard")
     elif gmode == "r":
-        rounds = 9
+        rounds["rounds_per_side"] = 3
+        rounds["OT"] = 3
         logging.info("Gamemode: Ranked")
     else:
         logging.error("Invalid gamemode")
         raise ValueError("Invalid gamemode")
-    for i in range(1, rounds+1):
-        if rounds == 9 and i in range(rounds-3, rounds+1):
-            print(f"Attacker (round {i} (OT)): {pick_random_op('attack')}")
-            print(f"Defender: (round {i}  (OT)): {pick_random_op('defense')}")
-            print(f"Attacker (round {i+1} (OT)): {pick_random_op('attack')}")
-            print(f"Defender: (round {i+1}  (OT)): {pick_random_op('defense')}")
-            print(f"Attacker (round {i+2} (OT)): {pick_random_op('attack')}")
-            print(f"Defender: (round {i+2}  (OT)): {pick_random_op('defense')}")
-            break
-        elif i == rounds:
-            print(f"Attacker (round {i} (OT)): {pick_random_op('attack')}")
-            print(f"Defender: (round {i}  (OT)): {pick_random_op('defense')}")
-        elif math.floor(rounds/2)<i:
-            print(f"Attacker (round {i}): {pick_random_op('attack')}")
-        else:
-            print(f"Defender: (round {i}): {pick_random_op('defense')}")
-
+    mode_ops = []
+    altmode_ops = []
+    for i in range(rounds["rounds_per_side"]+rounds["OT"]):
+        mode_ops.append(pick_random_op(mode, mode_ops))
+        altmode_ops.append(pick_random_op(altmode, altmode_ops))
+    logging.debug("Created mode_ops and altmode_ops")
+    for j in range(1, rounds["rounds_per_side"]+1):
+        print(f"{mode} (round {j}): {mode_ops[j-1]}")
+    for j in range(rounds["rounds_per_side"]+1, rounds["rounds_per_side"]*2+1):
+        print(f"{altmode} (round {j}): {altmode_ops[j-rounds["rounds_per_side"]-1]}")
+    for i in range(1, rounds["OT"]+1):
+        round_num = rounds['rounds_per_side']*2+i
+        print(f"{mode} (round {round_num} OT): {mode_ops[rounds['rounds_per_side']-1+i]}")
+        print(f"{altmode} (round {round_num} OT): {altmode_ops[rounds['rounds_per_side']-1+i]}")
+    logging.debug(mode_ops)
+    logging.debug(altmode_ops)
 
 def open_file():
     try: 
-        with open("operator_list.json", encoding="utf-8") as file:
+        with open(json_name, encoding="utf-8") as file:
             op_list = json.load(file)
             logging.info("operator_list.json loaded")
     except FileNotFoundError:
         logger.critical("operator_list.json missing")
-        print("operator_list.json does not exist")
+        print(f"{json_name} does not exist")
         raise FileNotFoundError
     return op_list
 def valid_operators(side:Literal["attack", "defense"]):
-    valid_operators_l = []
-    for role, operators in op_list.items():
-        for operator, owned in operators.items():
-            if role == side and owned:
-                valid_operators_l.append(operator)
+    valid_operators_l = [operator for operator, owned in op_list[side].items() if owned]
+    logging.debug(f"valid_operators({side}): {valid_operators_l}")
     return valid_operators_l
-def pick_random_op(side:Literal["attack", "defense"]):
+def pick_random_op(side:Literal["attack", "defense"], exclusions:list = None):
+    if exclusions is None:
+        exclusions = []
     v_op = valid_operators(side)
-    return v_op[random.randint(0, len(v_op)-1)]
+    operator = v_op[random.randint(0, len(v_op)-1)]
+    while operator in exclusions and len(v_op)!=1:
+        operator = v_op[random.randint(0, len(v_op)-1)]
+    logging.debug(f"pick_random_operator({side}):{operator}")
+    return operator
 op_list = open_file()
 def init():
     while True:
