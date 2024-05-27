@@ -26,7 +26,7 @@ def main():
         logging.error("Invalid mode input")
         raise ValueError(f"Not a valid input \"{mode}\"")
     rounds = 0
-    gmode = input("Gamemode: ").lower()[0]
+    gmode = input("Gamemode (for single operator enter \"o\"): ").lower()[0]
     rounds = {
         "rounds_per_side":0,
         "OT":0
@@ -43,6 +43,9 @@ def main():
         rounds["rounds_per_side"] = 3
         rounds["OT"] = 3
         logging.info("Gamemode: Ranked")
+    elif gmode == "o":
+        print(f"Random {mode} operator: {pick_random_op(mode, 1)}")
+        return
     else:
         logging.error("Invalid gamemode")
         raise ValueError("Invalid gamemode")
