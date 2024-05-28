@@ -7,7 +7,7 @@ filename = f"r6randomop_{str(datetime.now().date()).replace("-","_")}.log"
 log_format = "%(asctime)s::%(levelname)-8s:%(message)s"
 logging.basicConfig(filename=filename, encoding='utf-8', level=logging.DEBUG, format=log_format, datefmt="%H:%M:%S")
 # -=============Debug==============-
-debug:bool=True
+debug:bool=False
 if debug:
     json_name = "op_list.json"
 else:

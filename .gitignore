@@ -1,6 +1,3 @@
 *.log
-ign_*
 op_list.json
-exe.bat
-exesetup.json
 *.exe
