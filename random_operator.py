@@ -88,11 +88,8 @@ def pick_random_op(side:Literal["attack", "defense"], rounds:int, exclusions:lis
         exclusions = []
     operators = []
     v_op = valid_operators(side)
-    if len(v_op)<2:
-        raise ValueError("aint no way fam")
-    if len(v_op)<10 and not repeat:
-        print(f"Not enough operators to start ({side}), turning repeating to on.")
-        repeat = True
+    if len(v_op)<5:
+        raise ValueError(f"Not enough operators to start ({side})")
     logging.debug(f"pick random op:\tside: {side}\trepeat:{repeat}\trounds: {rounds}\texclusions: {exclusions}")
     for i in range(5):
         operator = v_op[random.randint(0, len(v_op)-1)]
