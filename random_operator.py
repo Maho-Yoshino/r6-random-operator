@@ -5,7 +5,7 @@ import tkinter as tk
 import tkinter.font as tkFont
 # -============Logging=============-
 logger = logging.getLogger(__name__)
-filename = f"r6randomop_{str(datetime.now().date()).replace("-","_")}.log"
+filename = f"r6randomop_{str(datetime.now().date()).replace('-','_')}.log"
 log_format = "%(asctime)s::%(levelname)-8s:%(message)s"
 with open(filename, "w") as tmp:
     tmp.write("")
