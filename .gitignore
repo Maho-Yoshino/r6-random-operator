@@ -1,3 +1,4 @@
 *.log
 op_list.json
 *.exe
+*ign_*
