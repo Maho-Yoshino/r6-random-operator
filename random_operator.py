@@ -5,6 +5,8 @@ from typing import Literal
 logger = logging.getLogger(__name__)
 filename = f"r6randomop_{str(datetime.now().date()).replace("-","_")}.log"
 log_format = "%(asctime)s::%(levelname)-8s:%(message)s"
+with open(filename, "w") as tmp:
+    tmp.write("")
 logging.basicConfig(filename=filename, encoding='utf-8', level=logging.DEBUG, format=log_format, datefmt="%H:%M:%S")
 # -=============Debug==============-
 debug:bool=False
@@ -73,12 +75,12 @@ def open_file():
     try: 
         with open(json_name, encoding="utf-8") as file:
             op_list = json.load(file)
-            logging.info("operator_list.json loaded")
+            logging.info(f"{json_name} loaded")
     except FileNotFoundError:
-        logger.critical("operator_list.json missing")
+        logger.critical(f"{json_name} missing")
         print(f"{json_name} does not exist")
-        raise FileNotFoundError
-    return op_list
+    else:
+        return op_list
 def valid_operators(side:Literal["attack", "defense"]):
     valid_operators_l = [operator for operator, owned in op_list[side].items() if owned]
     logging.debug(f"valid_operators({side}): {valid_operators_l}")
@@ -88,16 +90,17 @@ def pick_random_op(side:Literal["attack", "defense"], rounds:int, exclusions:lis
         exclusions = []
     operators = []
     v_op = valid_operators(side)
-    if len(v_op)<5:
+    if (len(v_op)<2 and repeat) or (len(v_op)<5 and not repeat):
+        logging.error(f"Not enough operators to start ({side})")
         raise ValueError(f"Not enough operators to start ({side})")
     logging.debug(f"pick random op:\tside: {side}\trepeat:{repeat}\trounds: {rounds}\texclusions: {exclusions}")
-    for i in range(5):
+    for _ in range(5):
         operator = v_op[random.randint(0, len(v_op)-1)]
-        while not ((repeat and len(exclusions)>0 and operator in exclusions[-1]) or (not repeat and len(exclusions)>0 and operator in exclusions[-1])) and (len(exclusions)>0 and operator in exclusions[-1]) and len(v_op)>1:
+        while (len(v_op)>2 and repeat and exclusions and operator != exclusions[-1]) or (len(v_op)>5 and not repeat and exclusions and operator not in exclusions):
             operator = v_op[random.randint(0, len(v_op)-1)]
         else:
             operators.append(operator)
-        if len(v_op)>5:
+        if len(v_op)>6:
             v_op.remove(operator)
         logging.debug(f"pick_random_operator({side}):{operator}")
     return operators
