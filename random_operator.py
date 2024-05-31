@@ -11,7 +11,7 @@ with open(filename, "w") as tmp:
     tmp.write("")
 logging.basicConfig(filename=filename, encoding='utf-8', level=logging.DEBUG, format=log_format, datefmt="%H:%M:%S")
 # -=============Debug==============-
-debug:bool=True
+debug:bool=False
 if debug:
     json_name = "op_list.json"
 else:
