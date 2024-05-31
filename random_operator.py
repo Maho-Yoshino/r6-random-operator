@@ -20,18 +20,18 @@ def main():
     mode_ops = []
     altmode_ops = []
     rounds_per_side = rounds["rounds_per_side"]+rounds["OT"]
-    for i in range(rounds_per_side*5+1):
+    for _ in range(rounds_per_side*5+1):
         mode_ops.append(pick_random_op(mode, rounds_per_side, mode_ops, True if op_repeat == "y" else False))
         altmode_ops.append(pick_random_op(altmode, rounds_per_side, altmode_ops, True if op_repeat == "y" else False))
-    for j in range(1, rounds["rounds_per_side"]*2+1):
+    for j in range(1, rounds["rounds_per_side"]*2+rounds["OT"]+1):
         if j<=rounds["rounds_per_side"]:
             print(f"round {j} ({mode}): {';'.join(mode_ops[j-1])}")
+        elif j>rounds["rounds_per_side"]*2:
+            print(f"round {j} (overtime)")
+            print(f"\t{mode}: {';'.join(mode_ops[j])}")
+            print(f"\t{altmode}: {';'.join(altmode_ops[j])}")
         else:
             print(f"round {j} ({altmode}): {';'.join(altmode_ops[j-rounds["rounds_per_side"]-1])}")
-    for i in range(1, rounds["OT"]+1):
-        round_num = rounds['rounds_per_side']*2+i
-        print(f"round {round_num} (overtime {mode}): {';'.join(mode_ops[rounds['rounds_per_side']-1+i])}")
-        print(f"round {round_num} (overtime {altmode}): {';'.join(altmode_ops[rounds['rounds_per_side']-1+i])}")
 
 def data_processing():
     if debug:
