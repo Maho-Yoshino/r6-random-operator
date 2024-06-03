@@ -1,4 +1,4 @@
-import random, json, os, logging, pprint
+import random, json, os, logging, argparse, psutil
 from datetime import datetime
 from typing import Literal
 import tkinter as tk
@@ -11,7 +11,14 @@ with open(filename, "w") as tmp:
     tmp.write("")
 logging.basicConfig(filename=filename, encoding='utf-8', level=logging.DEBUG, format=log_format, datefmt="%H:%M:%S")
 # -=============Debug==============-
-debug:bool=False
+parser = argparse.ArgumentParser()
+parser.add_argument("-d", help="Turns debug mode on when present", action="store_true")
+args = parser.parse_args()
+if psutil.Process(os.getppid()).name() == "cmd.exe":
+	debug:bool = args.d
+else:
+	debug:bool = True
+print(f"Debug mode: {'Enabled' if debug else 'Disabled'}")
 if debug:
     json_name = "op_list.json"
 else:
@@ -87,12 +94,16 @@ def init():
             logging.info("Gamemode: Ranked")
         elif gamemode == "o":
             return pick_random_op(mode, 1)
-        operators = {
-            "mode_normal":pick_random_op(mode, rounds["rounds_per_side"]),
-            "altmode_normal":pick_random_op(altmode, rounds["rounds_per_side"]),
-            "mode_OT":pick_random_op(mode, rounds["OT"]),
-            "altmode_OT":pick_random_op(altmode, rounds["OT"])
-        }
+        try:
+            operators = {
+                "mode_normal":pick_random_op(mode, rounds["rounds_per_side"], repeat=repeating),
+                "altmode_normal":pick_random_op(altmode, rounds["rounds_per_side"], repeat=repeating),
+                "mode_OT":pick_random_op(mode, rounds["OT"], repeat=repeating),
+                "altmode_OT":pick_random_op(altmode, rounds["OT"], repeat=repeating)
+            }
+        except ValueError as e:
+            errorlabel.config(text=e)
+            return
         for j in range(rounds["rounds_per_side"]*2+rounds["OT"]):
             if j in range(rounds["rounds_per_side"]*2):
                 tmp = tk.Label(root, text=f"Round {j+1}", font=font_size(15), pady=10)
@@ -140,7 +151,7 @@ def pick_random_op(side:Literal["attack", "defense"], rounds:int, exclusions:lis
     if exclusions is None:
         exclusions = []
     v_op = valid_operators(side)
-    if (len(v_op)<2 and repeat) or (len(v_op)<5 and not repeat):
+    if (len(v_op)<2 and repeat) or (len(v_op)<5 and not repeat) and (len(v_op)<5 and rounds == 1):
         logging.error(f"Not enough operators to start ({side})")
         raise ValueError(f"Not enough operators to start ({side})")
     #logging.debug(f"pick random op:\tside: {side}\trepeat:{repeat}\trounds: {rounds}\texclusions: {exclusions}")
