@@ -93,7 +93,12 @@ def init():
             rounds["OT"] = 3
             logging.info("Gamemode: Ranked")
         elif gamemode == "o":
-            return pick_random_op(mode, 1)
+            single_round = pick_random_op(mode, 1)
+            for col in range(5):
+                tmp = tk.Label(root, text=single_round[0][col], pady=10, padx=5)
+                tmp.grid(column=col+3, row=2)
+                labels.append(tmp)
+            return
         try:
             operators = {
                 "mode_normal":pick_random_op(mode, rounds["rounds_per_side"], repeat=repeating),
@@ -106,20 +111,20 @@ def init():
             return
         for j in range(rounds["rounds_per_side"]*2+rounds["OT"]):
             if j in range(rounds["rounds_per_side"]*2):
-                tmp = tk.Label(root, text=f"Round {j+1}", font=font_size(15), pady=10)
+                tmp = tk.Label(root, text=f"Round {j+1}", font=font_size(15), pady=10, padx=5)
                 labels.append(tmp)
                 tmp.grid(column=3, row=j+1)
             else:
-                tmp = tk.Label(root, text=f"Round {j+1} (OT)", font=font_size(15), pady=10)
+                tmp = tk.Label(root, text=f"Round {j+1} (OT)", font=font_size(15), pady=10, padx=5)
                 labels.append(tmp)
                 tmp.grid(column=3, row=j+1)
             for col in range(5):
                 if j<rounds["rounds_per_side"]:
-                    tmp = tk.Label(root, text=operators["mode_normal"][j][col], pady=10)
+                    tmp = tk.Label(root, text=operators["mode_normal"][j][col], pady=10, padx=5)
                     labels.append(tmp)
                     tmp.grid(column=col+6, row=j+1)
                 elif j<(rounds["rounds_per_side"]*2):
-                    tmp = tk.Label(root, text=operators["altmode_normal"][j-rounds["rounds_per_side"]][col], pady=10)
+                    tmp = tk.Label(root, text=operators["altmode_normal"][j-rounds["rounds_per_side"]][col], pady=10, padx=5)
                     labels.append(tmp)
                     tmp.grid(column=col+6, row=j+1)
                 else:
@@ -143,29 +148,34 @@ def init():
     gen_result_title = tk.Label(root, text="Results", font=font_size(15)).grid(row=0,column=6)
 
 # -==========Old Code=============-
-def valid_operators(side:Literal["attack", "defense"]):
-    valid_operators_l = [operator for operator, owned in op_list[side].items() if owned]
-    logging.debug(f"valid_operators({side}): {valid_operators_l}")
-    return valid_operators_l
+def contains(Iterable:list|tuple, item:int|str|float) -> bool:
+    for i in Iterable:
+        if type(i) not in [list, tuple]:
+            return True if item in Iterable else False
+        else:
+            for j in i:
+                return True if item in j else False
 def pick_random_op(side:Literal["attack", "defense"], rounds:int, exclusions:list = None, repeat:bool=False):
+    def valid_operators(side:Literal["attack", "defense"]):
+        valid_operators_l = [operator for operator, owned in op_list[side].items() if owned]
+        logging.debug(f"valid_operators({side}): {valid_operators_l}")
+        return valid_operators_l
     if exclusions is None:
         exclusions = []
     v_op = valid_operators(side)
-    if (len(v_op)<2 and repeat) or (len(v_op)<5 and not repeat) and (len(v_op)<5 and rounds == 1):
+    if (len(v_op)<5 and repeat) or (len(v_op)<10 and not repeat):
         logging.error(f"Not enough operators to start ({side})")
         raise ValueError(f"Not enough operators to start ({side})")
-    #logging.debug(f"pick random op:\tside: {side}\trepeat:{repeat}\trounds: {rounds}\texclusions: {exclusions}")
     rounds_operators = []
     for _ in range(1, rounds+2):
         operators = []
         for _ in range(5):
             operator = v_op[random.randint(0, len(v_op)-1)]
-            while (len(v_op)>2 and repeat and exclusions and operator != exclusions[-1]) or (len(v_op)>5 and not repeat and exclusions and operator not in exclusions)  :
+            repeat_if = repeat and exclusions and contains(exclusions, operator) 
+            no_repeat_if = not repeat and exclusions and contains(exclusions, operator)
+            while (repeat_if or no_repeat_if) and operator in operators:
                 operator = v_op[random.randint(0, len(v_op)-1)]
-            else:
-                operators.append(operator)
-            if len(v_op)>6:
-                v_op.remove(operator)
+            operators.append(operator)
             logging.debug(f"pick_random_operator({side}):{operator}")
         rounds_operators.append(operators)
     return rounds_operators
