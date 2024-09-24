@@ -46,26 +46,28 @@ def font_size(size:int):
         
 labels = []
 def init():
-    tk.Label(root, text="Select the gamemode:").grid(row=1,column=0)
-    gmode=tk.StringVar()
-    gmode.set("q")
-    tk.Radiobutton(root, text="Quick match", variable=gmode, value="q").grid(row=2, column=0)
-    tk.Radiobutton(root, text="Standard", variable=gmode, value="s").grid(row=3, column=0)
-    tk.Radiobutton(root, text="Ranked", variable=gmode, value="r").grid(row=4, column=0)
-    tk.Radiobutton(root, text="Single Operator", variable=gmode, value="o").grid(row=5, column=0)
+    def input_setup():
+        tk.Label(root, text="Select the gamemode:").grid(row=1,column=0)
+        gmode=tk.StringVar()
+        gmode.set("q")
+        tk.Radiobutton(root, text="Quick match", variable=gmode, value="q").grid(row=2, column=0)
+        tk.Radiobutton(root, text="Standard", variable=gmode, value="s").grid(row=3, column=0)
+        tk.Radiobutton(root, text="Ranked", variable=gmode, value="r").grid(row=4, column=0)
+        tk.Radiobutton(root, text="Single Operator", variable=gmode, value="o").grid(row=5, column=0)
 
-    side = tk.StringVar()
-    side.set("a")
-    tk.Label(root, text="Select Starting side\n(Operator side in case of Single operator picking)").grid(row=6, column=0)
-    tk.Radiobutton(root, text="Attack", variable=side, value="a").grid(row=7, column=0)
-    tk.Radiobutton(root, text="Defense", variable=side, value="d").grid(row=8, column=0)
+        side = tk.StringVar()
+        side.set("a")
+        tk.Label(root, text="Select Starting side\n(Operator side in case of Single operator picking)   ").grid(row=6, column=0)
+        tk.Radiobutton(root, text="Attack", variable=side, value="a").grid(row=7, column=0)
+        tk.Radiobutton(root, text="Defense", variable=side, value="d").grid(row=8, column=0)
 
-    repeat=tk.BooleanVar()
-    repeat.set(True)
-    tk.Label(root, text="Should the generated list have repeating operators?").grid(row=9, column=0)
-    tk.Radiobutton(root, text="Yes", variable=repeat, value=True).grid(row=10, column=0)
-    tk.Radiobutton(root, text="No", variable=repeat, value=False).grid(row=11, column=0)
-
+        repeat=tk.BooleanVar()
+        repeat.set(True)
+        tk.Label(root, text="Should the generated list have repeating operators?").grid(row=9,  column=0)
+        tk.Radiobutton(root, text="Yes", variable=repeat, value=True).grid(row=10, column=0)
+        tk.Radiobutton(root, text="No", variable=repeat, value=False).grid(row=11, column=0)
+        return gmode, side, repeat 
+    gmode, side, repeat = input_setup()
     def data_processing(mode:Literal["a","d"], gamemode:Literal["q", "s", "r", "o"], repeating:bool):
         global labels
         if len(labels)!=0:
@@ -93,11 +95,14 @@ def init():
             rounds["OT"] = 3
             logging.info("Gamemode: Ranked")
         elif gamemode == "o":
-            single_round = pick_random_op(mode, 1)
-            for col in range(5):
-                tmp = tk.Label(root, text=single_round[0][col], pady=10, padx=5)
-                tmp.grid(column=col+3, row=2)
-                labels.append(tmp)
+            try:
+                single_round = pick_random_op(mode, 1)
+                for col in range(5):
+                    tmp = tk.Label(root, text=single_round[0][col], pady=10, padx=5)
+                    tmp.grid(column=col+3, row=2)
+                    labels.append(tmp)
+            except ValueError as e:
+                errorlabel.config(text=e)    
             return
         try:
             operators = {
@@ -145,9 +150,10 @@ def init():
     errorlabel = tk.Label(root, text="", fg="red", font=font_size(20))
     errorlabel.grid(row=15, column=0)
 
-    gen_result_title = tk.Label(root, text="Results", font=font_size(15)).grid(row=0,column=6)
+    gen_result_title = tk.Label(root, text="Results", font=font_size(15))
+    gen_result_title.grid(row=0,column=6)
 
-# -==========Old Code=============-
+# -==========Other Code=============-
 def contains(Iterable:list|tuple, item:int|str|float) -> bool:
     for i in Iterable:
         if type(i) not in [list, tuple]:
